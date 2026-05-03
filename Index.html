@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Movie Hub 🎬</title>
+
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 10px;
+    }
+
+    .search-box {
+      text-align: center;
+      margin: 20px;
+    }
+
+    input {
+      padding: 10px;
+      width: 60%;
+    }
+
+    button {
+      padding: 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .movies {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      margin: 10px;
+      background: #222;
+      padding: 10px;
+      border-radius: 10px;
+      width: 200px;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    #popup {
+      display: none;
+      position: fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:black;
+      z-index: 999;
+    }
+
+    #popup span {
+      color:white;
+      font-size:30px;
+      cursor:pointer;
+      position:absolute;
+      top:10px;
+      right:20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🎬 Movie Hub</h1>
+
+<div class="search-box">
+  <input type="text" id="search" placeholder="Search movie...">
+  <button onclick="getMovies()">Search</button>
+  <button onclick="showFav()">❤️ Favorites</button>
+</div>
+
+<div class="movies" id="movies"></div>
+
+<!-- Trailer Popup -->
+<div id="popup">
+  <span onclick="closePopup()">❌</span>
+  <iframe id="video" width="100%" height="90%" frameborder="0" allowfullscreen></iframe>
+</div>
+
+<script>
+const API_KEY = "e66cc682";
+
+function getMovies() {
+  let query = document.getElementById("search").value;
+
+  fetch(`https://www.omdbapi.com/?s=${query}&apikey=${API_KEY}`)
+  .then(res => res.json())
+  .then(data => {
+    let output = "";
+
+    if (data.Search) {
+      data.Search.forEach(movie => {
+        output += `
+          <div class="card">
+            <h3>${movie.Title}</h3>
+            <img src="${movie.Poster}">
+            <p>${movie.Year}</p>
+
+            <button onclick="watchTrailer('${movie.Title}')">▶️ Trailer</button>
+            <button onclick="getDetails('${movie.imdbID}')">Details</button>
+            <button onclick="saveFav('${movie.Title}')">❤️ Save</button>
+          </div>
+        `;
+      });
+    } else {
+      output = "Movie not found 😢";
+    }
+
+    document.getElementById("movies").innerHTML = output;
+  });
+}
+
+// Trailer popup
+function watchTrailer(title) {
+  let search = title + " trailer";
+  let url = "https://www.youtube.com/embed?listType=search&list=" + search;
+
+  document.getElementById("video").src = url;
+  document.getElementById("popup").style.display = "block";
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+  document.getElementById("video").src = "";
+}
+
+// Details
+function getDetails(id) {
+  fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`)
+  .then(res => res.json())
+  .then(movie => {
+    alert(
+      "Title: " + movie.Title + "\n" +
+      "Rating: " + movie.imdbRating + "\n" +
+      "Actors: " + movie.Actors + "\n" +
+      "Plot: " + movie.Plot
+    );
+  });
+}
+
+// Save favorites
+function saveFav(title) {
+  let favs = JSON.parse(localStorage.getItem("fav")) || [];
+  favs.push(title);
+  localStorage.setItem("fav", JSON.stringify(favs));
+  alert("Saved ❤️");
+}
+
+// Show favorites
+function showFav() {
+  let favs = JSON.parse(localStorage.getItem("fav")) || [];
+  if (favs.length === 0) {
+    alert("No favorites yet 😢");
+  } else {
+    alert("Your Favorites:\n" + favs.join("\n"));
+  }
+}
+</script>
+
+</body>
+</html>
